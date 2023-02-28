@@ -7,11 +7,17 @@
 
 #include "explorers.h"
 
-struct objects_list get_objects_from_dir(char *path, int path_len, bool need_dir, bool need_hidden) {
+struct objects_list get_objects_from_dir(char *path, int path_len, bool need_dir, bool need_hidden, bool *cant_open) {
     DIR *cur_dir = opendir(path);
     struct dirent *data;
     struct objects_list objects;
     init_list(&objects);
+    if (cur_dir == NULL) {
+        *cant_open = true;
+        struct tm plug;
+        push_back_list(&objects, create_object("..", 0, plug, DIR_TYPE));
+        return objects;
+    }
     while (1) {
         data = readdir(cur_dir);
         if (data == NULL) {

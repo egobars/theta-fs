@@ -1,7 +1,3 @@
-#include <limits.h>
-#include <stdlib.h>
-#include <time.h>
-
 #include "objects_list.h"
 
 void init_list(struct objects_list *list) {

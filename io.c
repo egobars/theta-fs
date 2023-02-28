@@ -13,10 +13,19 @@ void print(int rows, int cols, int start, int end, char *cwd, int cwd_len, int c
            int *cursor_type, long *max_count, const char *copy_path, bool is_cut, bool is_display_hidden) {
     attron(COLOR_PAIR(1));
     printw("T %*s %10s %27s\n", -cols + 4 + 38, "Name", "Size", "Date modified");
-    struct objects_list dirs = get_objects_from_dir(cwd, cwd_len, true, is_display_hidden);
-    struct objects_list files = get_objects_from_dir(cwd, cwd_len, false, is_display_hidden);
+    bool cant_open = false;
+    struct objects_list dirs = get_objects_from_dir(cwd, cwd_len, true, is_display_hidden, &cant_open);
+    struct objects_list files;
+    if (!cant_open) {
+        files = get_objects_from_dir(cwd, cwd_len, false, is_display_hidden, &cant_open);
+    }
     long dirs_len = dirs.act_len;
-    long files_len = files.act_len;
+    long files_len;
+    if (cant_open) {
+        files_len = 0;
+    } else {
+        files_len = files.act_len;
+    }
     for (int i = MAX(start, 0); i < MIN(dirs_len, end); ++i) {
         if (i == cursor_position) {
             attron(COLOR_PAIR(2));
@@ -148,7 +157,13 @@ void print(int rows, int cols, int start, int end, char *cwd, int cwd_len, int c
     }
     *max_count = dirs_len + files_len;
     clear_list(&dirs);
-    clear_list(&files);
+    if (!cant_open) {
+        clear_list(&files);
+    }
+    if (cant_open) {
+        attron(COLOR_PAIR(1));
+        printw("You don't have permissions to open this directory.\n");
+    }
 }
 
 int
@@ -289,6 +304,16 @@ get_symbol(int rows, int cols, int *start, int *end, char *cwd, int *cwd_len, in
     } else if (key == 'v') {
         if (*is_copy || *is_cut) {
             int src_file = open(copy_path, O_RDONLY);
+            if (src_file == -1) {
+                clear();
+                attron(COLOR_PAIR(1));
+                printw("Source file is not available. Maybe it was deleted?\n");
+                refresh();
+                getch();
+                *is_copy = false;
+                *is_cut = false;
+                return 0;
+            }
             struct stat src_file_stat;
             stat(copy_path, &src_file_stat);
             add_name_to_path(cwd, copy_name);
