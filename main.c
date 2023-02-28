@@ -76,8 +76,11 @@ int main() {
     bool is_display_hidden = false;
     while (1) {
         clear();
-        print(rows, cols, start, end, cwd, cwd_len, cursor_position, cursor_object, &cursor_type, &max_count, copy_path, is_cut, is_display_hidden);
-        int val = get_symbol(rows, cols, &start, &end, cwd, &cwd_len, &cursor_position, cursor_object, cursor_type, max_count, copy_path, copy_name, &is_copy, &is_cut, extension_command_list, ext_size, &is_display_hidden);
+        print(rows, cols, start, end, cwd, cwd_len, cursor_position, cursor_object, &cursor_type, &max_count, copy_path,
+              is_cut, is_display_hidden);
+        int val = get_symbol(rows, cols, &start, &end, cwd, &cwd_len, &cursor_position, cursor_object, cursor_type,
+                             max_count, copy_path, copy_name, &is_copy, &is_cut, extension_command_list, ext_size,
+                             &is_display_hidden);
         if (val == 1) {
             break;
         }
