@@ -1,7 +1,7 @@
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <ncurses.h>
 #include <limits.h>
-#include <locale.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -151,7 +151,7 @@ void print(int rows, int cols, int start, int end, char *cwd, int cwd_len, int c
                 cursor_object[j] = cur_name[j];
             }
             cursor_object[name_len] = '\0';
-            *cursor_type = FILE_TYPE;
+            *cursor_type = files.objects[i].type;
         }
         free(cur_name);
     }
@@ -169,7 +169,7 @@ void print(int rows, int cols, int start, int end, char *cwd, int cwd_len, int c
 int
 get_symbol(int rows, int cols, int *start, int *end, char *cwd, int *cwd_len, int *cursor_position, char *cursor_object,
            int cursor_type, long max_count, char *copy_path, char *copy_name, bool *is_copy, bool *is_cut,
-           struct extension_command *extension_command_list, int ecl_size, bool *is_display_hidden) {
+           struct extension_library *extension_command_list, int ecl_size, bool *is_display_hidden) {
     int key = getch();
     if (key == 'q') {
         return 1;
@@ -210,21 +210,68 @@ get_symbol(int rows, int cols, int *start, int *end, char *cwd, int *cwd_len, in
             *start = 0;
             *end = rows;
         } else {
-            char extension[10];
-            char command[10];
+            char file[PATH_MAX];
+            if (cursor_type == LINK_TYPE) {
+                add_name_to_path(cwd, cursor_object);
+                long res = readlink(cwd, file, PATH_MAX);
+                cwd[*cwd_len] = '\0';
+                if (res == -1) {
+                    return 0;
+                }
+            } else {
+                add_name_to_path(cwd, cursor_object);
+                int ptr = 0;
+                while (cwd[ptr] != '\0') {
+                    file[ptr] = cwd[ptr];
+                    ++ptr;
+                }
+                file[ptr] = '\0';
+                cwd[*cwd_len] = '\0';
+            }
+            char extension[EXT_LEN];
+            char library[LIB_LEN];
             bool found = false;
-            get_extension(cursor_object, extension);
+            get_extension(file, extension);
             for (int i = 0; i < ecl_size; ++i) {
                 if (is_same(extension_command_list[i].extension, extension)) {
                     found = true;
-                    for (int j = 0; j < 10; ++j) {
-                        command[j] = extension_command_list[i].command[j];
+                    for (int j = 0; j < LIB_LEN; ++j) {
+                        library[j] = extension_command_list[i].library[j];
                     }
                 }
             }
+            char pwd[PATH_MAX + LIB_LEN];
+            getcwd(pwd, sizeof(pwd));
+            int pwd_len = 0;
+            for (int i = 0; i < PATH_MAX; ++i) {
+                if (pwd[i] == '\0') {
+                    pwd_len = i;
+                    break;
+                }
+            }
+            while (pwd[pwd_len] != '/') {
+                --pwd_len;
+            }
+            ++pwd_len;
+            pwd[pwd_len] = 'e';
+            ++pwd_len;
+            pwd[pwd_len] = 'x';
+            ++pwd_len;
+            pwd[pwd_len] = 't';
+            ++pwd_len;
+            pwd[pwd_len] = '/';
+            ++pwd_len;
+            for (int i = 0; i < LIB_LEN; ++i) {
+                pwd[pwd_len] = library[i];
+                ++pwd_len;
+            }
+            void *handle = dlopen(pwd, RTLD_LAZY);
+            if (!handle) {
+                return 0;
+            }
+            void (*open_file)(const char*) = dlsym(handle, "open_file");
             if (found && fork() == 0) {
-                add_name_to_path(cwd, cursor_object);
-                execlp(command, "1", cwd, NULL);
+                (*open_file)(file);
             }
         }
     } else if (key == 'd') {

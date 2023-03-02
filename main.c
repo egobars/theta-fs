@@ -21,22 +21,22 @@ int main() {
     FILE *ext_file = fopen("extensions.txt", "ab+");
     while (!feof(ext_file)) {
         ++ext_size;
-        char extension[10];
-        char command[10];
-        fscanf(ext_file, "%s %s", extension, command);
+        char extension[EXT_LEN];
+        char library[LIB_LEN];
+        fscanf(ext_file, "%s %s", extension, library);
     }
     fclose(ext_file);
-    struct extension_command ext_com;
-    struct extension_command *extension_command_list = calloc(ext_size, sizeof(ext_com));
+    struct extension_library ext_lib;
+    struct extension_library *extension_library_list = calloc(ext_size, sizeof(ext_lib));
     ext_file = fopen("extensions.txt", "r");
     int ptr = 0;
     while (!feof(ext_file)) {
         ++ext_size;
-        char extension[10];
-        char command[10];
-        fscanf(ext_file, "%s %s", extension, command);
-        add_extension_and_command(&ext_com, extension, command);
-        extension_command_list[ptr] = ext_com;
+        char extension[EXT_LEN];
+        char library[LIB_LEN];
+        fscanf(ext_file, "%s %s", extension, library);
+        add_extension_and_library(&ext_lib, extension, library);
+        extension_library_list[ptr] = ext_lib;
         ++ptr;
     }
     fclose(ext_file);
@@ -79,7 +79,7 @@ int main() {
         print(rows, cols, start, end, cwd, cwd_len, cursor_position, cursor_object, &cursor_type, &max_count, copy_path,
               is_cut, is_display_hidden);
         int val = get_symbol(rows, cols, &start, &end, cwd, &cwd_len, &cursor_position, cursor_object, cursor_type,
-                             max_count, copy_path, copy_name, &is_copy, &is_cut, extension_command_list, ext_size,
+                             max_count, copy_path, copy_name, &is_copy, &is_cut, extension_library_list, ext_size,
                              &is_display_hidden);
         if (val == 1) {
             break;
@@ -87,6 +87,6 @@ int main() {
         refresh();
     }
     endwin();
-    free(extension_command_list);
+    free(extension_library_list);
     return 0;
 }

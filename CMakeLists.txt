@@ -8,4 +8,4 @@ find_package(Curses)
 include_directories(${CURSES_INCLUDE_DIR})
 
 add_executable(theta_fs main.c utils.c objects_list.c io.c explorers.c constants.h explorers.h io.h objects_list.h utils.h)
-target_link_libraries(theta_fs ${CURSES_LIBRARIES})
+target_link_libraries(theta_fs PUBLIC ${CURSES_LIBRARIES} dl)

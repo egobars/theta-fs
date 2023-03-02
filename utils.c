@@ -81,7 +81,7 @@ void get_round_size_and_suffix(long int *size, char *suffix, int *suffix_len) {
     }
 }
 
-void add_extension_and_command(struct extension_command *ext_com, const char *extension, const char *command) {
+void add_extension_and_library(struct extension_library *ext_com, const char *extension, const char *command) {
     int ptr = 0;
     while (1) {
         ext_com->extension[ptr] = extension[ptr];
@@ -92,8 +92,8 @@ void add_extension_and_command(struct extension_command *ext_com, const char *ex
     }
     ptr = 0;
     while (1) {
-        ext_com->command[ptr] = command[ptr];
-        if (ext_com->command[ptr] == '\0') {
+        ext_com->library[ptr] = command[ptr];
+        if (ext_com->library[ptr] == '\0') {
             break;
         }
         ++ptr;
