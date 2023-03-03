@@ -1,5 +1,7 @@
 #include <ctype.h>
+#include <limits.h>
 #include <ncurses.h>
+#include <unistd.h>
 
 #include "utils.h"
 
@@ -139,4 +141,26 @@ bool is_same(const char *first, const char *second) {
         ++ptr;
     }
     return true;
+}
+
+void add_to_filename(char *cwd, int cwd_len) {
+    int to_add = 0;
+    while (1) {
+        int now = to_add;
+        char array[NAME_MAX];
+        int ptr = 0;
+        while (now > 0) {
+            array[ptr] = '0' + now % 10;
+            ++ptr;
+            now /= 10;
+        }
+        array[ptr] = '\0';
+        for (int i = 0; i < ptr + 1; ++i) {
+            cwd[cwd_len + i] = array[i];
+        }
+        if (access(cwd, F_OK) != 0) {
+            break;
+        }
+        ++to_add;
+    }
 }

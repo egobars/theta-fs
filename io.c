@@ -270,6 +270,9 @@ get_symbol(int rows, int cols, int *start, int *end, char *cwd, int *cwd_len, in
                 return 0;
             }
             void (*open_file)(const char*) = dlsym(handle, "open_file");
+            if (dlerror() != NULL) {
+                return 0;
+            }
             if (found && fork() == 0) {
                 (*open_file)(file);
             }
@@ -364,26 +367,34 @@ get_symbol(int rows, int cols, int *start, int *end, char *cwd, int *cwd_len, in
             struct stat src_file_stat;
             stat(copy_path, &src_file_stat);
             add_name_to_path(cwd, copy_name);
-            if (access(cwd, F_OK) == 0) {
-                clear();
-                attron(COLOR_PAIR(1));
-                printw("File with this name already exists. Do you want to rewrite it? (y/n)");
-                refresh();
-                bool want_rewrite = true;
-                while (1) {
-                    key = getch();
-                    if (key == 'n') {
-                        want_rewrite = false;
+            if (!is_same(copy_path, cwd)) {
+                if (access(cwd, F_OK) == 0) {
+                    clear();
+                    attron(COLOR_PAIR(1));
+                    printw("File with this name already exists. Do you want to rewrite it? (y/n)");
+                    refresh();
+                    bool want_rewrite = true;
+                    while (1) {
+                        key = getch();
+                        if (key == 'n') {
+                            want_rewrite = false;
+                        }
+                        if (key == 'y' || key == 'n') {
+                            break;
+                        }
                     }
-                    if (key == 'y' || key == 'n') {
-                        break;
+                    if (!want_rewrite) {
+                        cwd[*cwd_len] = '\0';
+                        close(src_file);
+                        return 0;
                     }
                 }
-                if (!want_rewrite) {
-                    cwd[*cwd_len] = '\0';
-                    close(src_file);
-                    return 0;
+            } else {
+                int new_len = 0;
+                while (cwd[new_len] != '\0') {
+                    ++new_len;
                 }
+                add_to_filename(cwd, new_len);
             }
             int dst_file = creat(cwd, src_file_stat.st_mode);
             cwd[*cwd_len] = '\0';

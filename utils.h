@@ -22,3 +22,5 @@ void add_extension_and_library(struct extension_library *ext_com, const char *ex
 void get_extension(const char *name, char *extension);
 
 bool is_same(const char *first, const char *second);
+
+void add_to_filename(char *cwd, int cwd_len);
