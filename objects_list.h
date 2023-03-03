@@ -1,5 +1,3 @@
-#include <limits.h>
-#include <stdlib.h>
 #include <time.h>
 
 #include "constants.h"

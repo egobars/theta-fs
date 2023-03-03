@@ -1,6 +1,3 @@
-#include <ctype.h>
-#include <ncurses.h>
-
 #include "objects_list.h"
 
 struct extension_library {
